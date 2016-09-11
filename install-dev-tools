@@ -1,0 +1,81 @@
+#!/bin/bash
+
+platform=`uname`
+
+ensure_installed() {
+  if is_installed $1; then
+    return 0
+  fi
+
+  if is_installed apt-get; then
+    apt-get update && apt-get install $1 -y
+  else
+    echo "Please make sure git and curl are installed"
+    exit 1
+  fi
+}
+
+function is_installed {
+  if [[ -z "$(which $1)" ]]; then
+    return 1
+  fi
+
+  return 0
+}
+
+ensure_installed git
+ensure_installed curl
+
+if [[ $platform == "Darwin" ]]; then
+  echo
+  echo installing homebrew
+  echo
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
+
+if ! is_installed nvm; then
+  # install nvm, Node version manager
+  echo
+  echo installing nvm
+  echo
+  curl https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+
+  tee -a ~/.tools <<EOF
+# nvm
+export NODE_VERSION=4
+export NVM_DIR="\${HOME}/.nvm"
+# export NVM_DIR="/Users/aboubakr/.nvm"
+[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh" #&& nvm use \$NODE_VERSION # This loads nvm
+[ -s "\$NVM_DIR/bash_completion" ] && . "\$NVM_DIR/bash_completion"
+
+EOF
+fi
+
+if ! is_installed rbenv; then
+  # install rbenv, Ruby version manager
+  echo
+  echo installing rbenv
+  echo
+  # install rbenv, Ruby version manager
+  curl https://raw.githubusercontent.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash
+
+  tee -a ~/.tools <<EOF
+# rbenv
+export RBENV_ROOT="\${HOME}/.rbenv"
+if [ -d "\${RBENV_ROOT}" ]; then
+  export PATH="\${RBENV_ROOT}/bin:\${PATH}"
+  eval "\$(rbenv init -)"
+fi
+
+EOF
+
+fi
+
+echo "[[ -e ~/.tools ]] && source ~/.tools" | tee -a ~/.bash_profile
+
+source ~/.tools
+
+# install node 4 (LTS)
+nvm install $NODE_VERSION && nvm use $NODE_VERSION
+
+npm install -g grunt-cli bower broccoli-cli

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+platform=`uname`
+
+ensure_installed() {
+  if is_installed $1; then
+    return 0
+  fi
+
+  if is_installed apt-get; then
+    apt-get update && apt-get install $1 -y
+  else
+    echo "Please make sure git and curl are installed"
+    exit 1
+  fi
+}
+
+function is_installed {
+  if [[ -z "$(which $1)" ]]; then
+    return 1
+  fi
+
+  return 0
+}
+
+ensure_installed git
+ensure_installed curl
+
+zsh
+git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
+chsh -s /bin/zsh

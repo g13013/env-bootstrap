@@ -1,0 +1,38 @@
+#!/bin/bash
+
+platform=`uname`
+
+ensure_installed() {
+  if is_installed $1; then
+    return 0
+  fi
+
+  if is_installed apt-get; then
+    apt-get update && apt-get install $1 -y
+  else
+    echo "Please make sure git and curl are installed"
+    exit 1
+  fi
+}
+
+function is_installed {
+  if [[ -z "$(which $1)" ]]; then
+    return 1
+  fi
+
+  return 0
+}
+
+ensure_installed git
+ensure_installed curl
+
+cd $HOME
+git clone https://github.com/g13013/env-bootstrap.git
+cd env-bootstrap
+./install-prezto
+./install-dev-tools
+
+setopt EXTENDED_GLOB
+for rcfile in "${ZDOTDIR:-$HOME}"/dev-bootstrap/runcoms/^README.md(.N); do
+  ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
+done
