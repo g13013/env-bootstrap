@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 platform=`uname`
 
@@ -26,6 +26,15 @@ function is_installed {
 ensure_installed git
 ensure_installed curl
 
-zsh
 git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
+
+setopt EXTENDED_GLOB
+for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do
+  if [[ -f "${ZDOTDIR:-$HOME}/.${rcfile:t}" ]]; then
+    echo "${ZDOTDIR:-$HOME}/.${rcfile:t} already exists, not copying"
+  else
+    ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
+  fi
+done
+
 chsh -s /bin/zsh

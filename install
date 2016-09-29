@@ -23,16 +23,32 @@ function is_installed {
   return 0
 }
 
+ensure_installed zsh
 ensure_installed git
 ensure_installed curl
 
 cd $HOME
 git clone https://github.com/g13013/env-bootstrap.git
 cd env-bootstrap
-./install-prezto
-./install-dev-tools
+curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-prezto | zsh
+curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-dev-tools | bash
 
-setopt EXTENDED_GLOB
-for rcfile in "${ZDOTDIR:-$HOME}"/dev-bootstrap/runcoms/^README.md(.N); do
-  ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
-done
+tee -a ~/.zmodules <<EOF
+zstyle ':prezto:load' pmodule \
+  'fasd' \
+  'archive' \
+  'autosuggestions' \
+  'rsync' \
+  'tmux' \
+  'git' \
+  'environment' \
+  'terminal' \
+  'editor' \
+  'history' \
+  'directory' \
+  'spectrum' \
+  'utility' \
+  'completion' \
+  'prompt'
+EOF
+

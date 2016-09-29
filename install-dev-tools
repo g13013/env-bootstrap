@@ -71,7 +71,7 @@ EOF
 
 fi
 
-echo "[[ -e ~/.tools ]] && source ~/.tools" | tee -a ~/.zshrc
+echo "[[ -f ~/.tools ]] && source ~/.tools" | tee -a ~/.zshrc
 
 source ~/.tools
 
