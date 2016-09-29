@@ -79,5 +79,3 @@ source ~/.tools
 
 # install node 4 (LTS)
 nvm install $NODE_VERSION && nvm use $NODE_VERSION
-
-npm install -g grunt-cli bower broccoli-cli
