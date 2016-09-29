@@ -4,6 +4,14 @@ set -e
 
 platform=`uname`
 
+is_installed() {
+  if [[ -z "$(which $1)" ]]; then
+    return 1
+  fi
+
+  return 0
+}
+
 ensure_installed() {
   if is_installed $1; then
     return 0
@@ -11,18 +19,12 @@ ensure_installed() {
 
   if is_installed apt-get; then
     apt-get update && apt-get install $1 -y
+  elif is_installed brew; then
+    brew update && brew install $1
   else
-    echo "Please make sure git and curl are installed"
+    echo "Can't manually install $1, please make sure $1 is installed and restart again"
     exit 1
   fi
-}
-
-function is_installed {
-  if [[ -z "$(which $1)" ]]; then
-    return 1
-  fi
-
-  return 0
 }
 
 ensure_installed git

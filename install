@@ -4,20 +4,7 @@ set -e
 
 platform=`uname`
 
-ensure_installed() {
-  if is_installed $1; then
-    return 0
-  fi
-
-  if is_installed apt-get; then
-    apt-get update && apt-get install $1 -y
-  else
-    echo "Please make sure git and curl are installed"
-    exit 1
-  fi
-}
-
-function is_installed {
+is_installed() {
   if [[ -z "$(which $1)" ]]; then
     return 1
   fi
@@ -25,6 +12,22 @@ function is_installed {
   return 0
 }
 
+ensure_installed() {
+  if is_installed $1; then
+    return 0
+  fi
+
+  if is_installed apt-get; then
+    apt-get update && apt-get install $1 -y
+  elif is_installed brew; then
+    brew update && brew install $1
+  else
+    echo "Can't manually install $1, please make sure $1 is installed and restart again"
+    exit 1
+  fi
+}
+
+# these tools should be already present on mac
 ensure_installed zsh
 ensure_installed git
 ensure_installed curl
