@@ -35,22 +35,14 @@ cd env-bootstrap
 curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-prezto | zsh
 curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-dev-tools | bash
 
-tee -a ~/.zmodules <<EOF
-zstyle ':prezto:load' pmodule \
-  'fasd' \
-  'archive' \
-  'autosuggestions' \
-  'rsync' \
-  'tmux' \
-  'git' \
-  'environment' \
-  'terminal' \
-  'editor' \
-  'history' \
-  'directory' \
-  'spectrum' \
-  'utility' \
-  'completion' \
-  'prompt'
+tee ~/.zmodules <<EOF
+zstyle ':prezto:load' pmodule \\
+  'fasd' \\
+  'archive' \\
+  'autosuggestions' \\
+  'rsync' \\
+  'tmux' \\
+  'git'
 EOF
 
+echo "[[ -f ~/.zmodules ]] && source ~/.zmodules" | tee -a ~/.zshrc
