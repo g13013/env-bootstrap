@@ -45,7 +45,16 @@ zstyle ':prezto:load' pmodule \\
   'autosuggestions' \\
   'rsync' \\
   'tmux' \\
-  'git'
+  'git' \\
+  'environment' \\
+  'terminal' \\
+  'editor' \\
+  'history' \\
+  'directory' \\
+  'spectrum' \\
+  'utility' \\
+  'completion' \\
+  'prompt'
 EOF
 
 echo "[[ -f ~/.zmodules ]] && source ~/.zmodules" | tee -a ~/.zshrc

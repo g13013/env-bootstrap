@@ -79,5 +79,5 @@ echo "[[ -f ~/.tools ]] && source ~/.tools" | tee -a ~/.zshrc
 
 source ~/.tools
 
-# install node 4 (LTS)
+# install node LTS (4.x)
 nvm install $NODE_VERSION && nvm use $NODE_VERSION
