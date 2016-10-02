@@ -26,7 +26,7 @@ ensure_installed() {
   elif is_installed brew; then
     brew update && brew install $1
   else
-    echo "Can't manually install $1, please make sure $1 is installed and restart again"
+    echo "Can't automatically install $1"
     exit 1
   fi
 }
