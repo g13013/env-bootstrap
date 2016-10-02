@@ -63,4 +63,5 @@ EOF
 
 echo "[[ -f ~/.zmodules ]] && source ~/.zmodules" | tee -a ~/.zshrc
 
+if [[ "$platform" == "Linux" ]]; then sudo add-apt-repository ppa:aacebedo/fasd; fi
 ensure_installed fasd
