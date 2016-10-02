@@ -36,9 +36,6 @@ ensure_installed zsh
 ensure_installed git
 ensure_installed curl
 
-cd $HOME
-git clone https://github.com/g13013/env-bootstrap.git
-cd env-bootstrap
 curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-prezto | zsh
 curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-dev-tools | bash
 
