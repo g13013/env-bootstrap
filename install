@@ -12,8 +12,8 @@ set -e
 # load helpers
 [[ -z $(which curl) ]] &&
   (
-    echo -e "\e[1;32;40mInstalling curl...\033[0m" && apt-get update 1>/dev/null && apt-get install curl -y 1>/dev/null && export PKG_UPDATED=1 ||
-    echo -e "\e[1;31;40mInstalling curl failed\033[0m"
+    echo -e "\x1B[0;32mInstalling curl...\033[0m" && apt-get update 1>/dev/null && apt-get install curl -y 1>/dev/null && export PKG_UPDATED=1 ||
+    echo -e "\x1B[0;31mInstalling curl failed\033[0m"
   )
 
 curl -ssL  $INSTALL_SOURCE/install_helpers > /tmp/install_helpers && source /tmp/install_helpers || (echo "Can't load helpers file from $INSTALL_SOURCE/install_helpers" && exit 1)
