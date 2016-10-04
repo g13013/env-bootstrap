@@ -1,48 +1,36 @@
 #!/bin/zsh
 
+INSTALL_SOURCE=${INSTALL_SOURCE:-"https://raw.githubusercontent.com/g13013/env-bootstrap/master"}
+
 set -e
 
-platform=`uname`
+# load helpers
+[[ -z $(which curl) ]] &&  apt-get update && apt-get install curl -y
+curl -ssL  $INSTALL_SOURCE/install_helpers > /tmp/install_helpers && source /tmp/install_helpers || (echo "Can't load helpers file from $INSTALL_SOURCE/install_helpers" && exit 1)
 
-is_installed() {
-  if [[ -z "$(which $1)" ]]; then
-    return 1
-  fi
+! is_installed git && (on_mac && xcode-select --install || ensure_installed git) # git is special, on mac we prioritize xcode git version
 
-  return 0
-}
-
-ensure_installed() {
-  if is_installed $1; then
-    return 0
-  fi
-
-  if is_installed apt-get; then
-    if [[ -z "$APT_UPDATED" ]]; then
-      apt-get update
-      export APT_UPDATED=1
-    fi
-    apt-get install $1 -y
-  elif is_installed brew; then
-    brew update && brew install $1
-  else
-    echo "Can't automatically install $1"
-    exit 1
-  fi
-}
-
-ensure_installed git
-ensure_installed curl
-
-git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
+if [[ ! -e "${ZDOTDIR:-$HOME}/.zprezto" ]]; then
+  git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
+else
+  log "zprezto already installed"
+fi
 
 setopt EXTENDED_GLOB
 for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do
   if [[ -f "${ZDOTDIR:-$HOME}/.${rcfile:t}" ]]; then
-    echo "${ZDOTDIR:-$HOME}/.${rcfile:t} already exists, not copying"
+    warn "${ZDOTDIR:-$HOME}/.${rcfile:t} already exists, not copying"
   else
     ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
   fi
 done
+
+log "Installing zprezto modules"
+warn "    wakatime"
+mkdir -p ~/.zprezto/modules/wakatime &&
+  (curl -sSL https://raw.githubusercontent.com/wbinglee/zsh-wakatime/master/zsh-wakatime.plugin.zsh | tee ~/.zprezto/modules/wakatime/init.zsh) 1>/dev/null
+warn "    zsh-cwd-history"
+mkdir -p ~/.zprezto/modules/zsh-cwd-history &&
+  (curl  -sSL https://raw.githubusercontent.com/ericfreese/zsh-cwd-history/master/zsh-cwd-history.zsh | tee ~/.zprezto/modules/zsh-cwd-history/init.zsh) 1>/dev/null
 
 chsh -s /bin/zsh

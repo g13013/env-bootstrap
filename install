@@ -1,64 +1,49 @@
 #!/bin/bash
 
+if [[ "`uname`" == 'Linux' ]] && [[ $UID != 0 ]]; then
+    echo "Please run this script with sudo to be able to install packages"
+    exit 1
+fi
+
+INSTALL_SOURCE=${INSTALL_SOURCE:-"https://raw.githubusercontent.com/g13013/env-bootstrap/master"}
+
 set -e
 
-platform=`uname`
+# load helpers
+[[ -z $(which curl) ]] &&
+  (
+    echo -e "\e[1;32;40mInstalling curl...\033[0m" && apt-get update 1>/dev/null && apt-get install curl -y 1>/dev/null && export PKG_UPDATED=1 ||
+    echo -e "\e[1;31;40mInstalling curl failed\033[0m"
+  )
 
-is_installed() {
-  if [[ -z "$(which $1)" ]]; then
-    return 1
-  fi
+curl -ssL  $INSTALL_SOURCE/install_helpers > /tmp/install_helpers && source /tmp/install_helpers || (echo "Can't load helpers file from $INSTALL_SOURCE/install_helpers" && exit 1)
 
-  return 0
-}
+! is_installed git && (on_mac && xcode-select --install || ensure_installed git) # git is special, on mac we prioritize xcode git version
 
-ensure_installed() {
-  if is_installed $1; then
-    return 0
-  fi
 
-  if is_installed apt-get; then
-    if [[ -z "$APT_UPDATED" ]]; then
-      apt-get update
-      export APT_UPDATED=1
-    fi
-    apt-get install $1 -y
-  elif is_installed brew; then
-    brew update && brew install $1
-  else
-    echo "Can't manually install $1"
-    exit 1
-  fi
-}
-
-# these tools should be already present on mac
 ensure_installed zsh
-ensure_installed git
-ensure_installed curl
 
-curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-prezto | zsh
-curl https://raw.githubusercontent.com/g13013/env-bootstrap/master/install-dev-tools | bash
+curl -sSL ${INSTALL_SOURCE}/install-prezto | INSTALL_SOURCE=$INSTALL_SOURCE zsh
+curl -sSL ${INSTALL_SOURCE}/install-dev-tools | INSTALL_SOURCE=$INSTALL_SOURCE bash
 
-tee ~/.zmodules <<EOF
-zstyle ':prezto:load' pmodule \\
-  'fasd' \\
-  'archive' \\
-  'autosuggestions' \\
-  'rsync' \\
-  'tmux' \\
-  'git' \\
-  'environment' \\
-  'terminal' \\
-  'editor' \\
-  'history' \\
-  'directory' \\
-  'spectrum' \\
-  'utility' \\
-  'completion' \\
-  'prompt'
-EOF
+log "Configuring zprezto (zsh)"
+[ ! -f ~/.zmodules ] && (curl -sSL ${INSTALL_SOURCE}/zmodules | tee ~/.zmodules 1>/dev/null) || warn '~/.zmodules already exists, ignoring'
+([ ! -e ~/.zpreztorc ] ||  [ -L ~/.zpreztorc ]) && (curl -sSL ${INSTALL_SOURCE}/zpreztorc | tee ~/.zpreztorc 1>/dev/null) || warn '~/.zpreztorc already exists, ignoring'
 
-echo "[[ -f ~/.zmodules ]] && source ~/.zmodules" | tee -a ~/.zshrc
+if ! is_installed fasd && on_linux; then
+  log "Installing fasd prerequisites"
 
-if [[ "$platform" == "Linux" ]]; then sudo add-apt-repository ppa:aacebedo/fasd; fi
+  if ! is_installed add-apt-repository; then
+    ensure_installed software-properties-common
+    ensure_installed python-software-properties
+  fi
+
+  add-apt-repository ppa:aacebedo/fasd -y 1>/dev/null
+  apt-get update 1>/dev/null
+fi
+
 ensure_installed fasd
+
+warn
+warn "Tweak your list of zprezto modules to load in ~/.zmodules"
+warn

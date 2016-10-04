@@ -1,73 +1,61 @@
 #!/bin/bash
 
+INSTALL_SOURCE=${INSTALL_SOURCE:-"https://raw.githubusercontent.com/g13013/env-bootstrap/master"}
+
 set -e
 
-platform=`uname`
+# load helpers
+[[ -z $(which curl) ]] &&  apt-get update && apt-get install curl -y
+curl -ssL  $INSTALL_SOURCE/install_helpers > /tmp/install_helpers && source /tmp/install_helpers || (echo "Can't load helpers file from $INSTALL_SOURCE/install_helpers" && exit 1)
 
-is_installed() {
-  if [[ -z "$(which $1)" ]]; then
-    return 1
-  fi
+! is_installed git && (on_mac && xcode-select --install || ensure_installed git) # git is special, on mac we prioritize xcode git version
 
-  return 0
-}
-
-ensure_installed() {
-  if is_installed $1; then
-    return 0
-  fi
-
-  if is_installed apt-get; then
-    if [[ -z "$APT_UPDATED" ]]; then
-      apt-get update
-      export APT_UPDATED=1
-    fi
-    apt-get install $1 -y
-  elif is_installed brew; then
-    brew update && brew install $1
-  else
-    echo "Can't manually install $1"
-    exit 1
-  fi
-}
-
-ensure_installed git
-ensure_installed curl
-
-if [[ $platform == "Darwin" ]]; then
-  echo
-  echo installing homebrew
-  echo
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+if on_mac && ! is_installed brew ; then
+  log "Installing homebrew"
+  /usr/bin/ruby -e "$(curl -sSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+else
+  on_mac && log "homebrew is already installed"
 fi
 
 if ! is_installed nvm; then
   # install nvm, Node version manager
-  echo
-  echo installing nvm
-  echo
-  curl https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+  log "Installing nvm"
 
-  tee -a ~/.tools <<EOF
+  curl -SsL https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+
+  if in_file 'nvm.sh' ~/.zshrc; then
+    warn "nvm is already loaded from ~/.zshrc, since it will be loaded from ~/.tools it is no longer necessary to keep it there"
+  fi
+
+  if in_file 'nvm.sh' ~/.tools ;then
+    log "nvm is already loaded from ~/.tools"
+  else
+    tee -a ~/.tools 1>/dev/null <<EOF
 # nvm
-export NODE_VERSION=4
 export NVM_DIR="\${HOME}/.nvm"
-# export NVM_DIR="/Users/aboubakr/.nvm"
-[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh" #&& nvm use \$NODE_VERSION # This loads nvm
+[ -s "\$NVM_DIR/nvm.sh" ] && . "\$NVM_DIR/nvm.sh"
 [ -s "\$NVM_DIR/bash_completion" ] && . "\$NVM_DIR/bash_completion"
 
 EOF
+  fi
+else
+  warn "nvm is already installed"
 fi
 
 if ! is_installed rbenv; then
   # install rbenv, Ruby version manager
-  echo
-  echo installing rbenv
-  echo
-  # install rbenv, Ruby version manager
-  curl https://raw.githubusercontent.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash
+  log "Installing rbenv"
 
-  tee -a ~/.tools <<EOF
+  curl -SsL https://raw.githubusercontent.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash
+
+  if in_file 'rbenv init' ~/.zshrc; then
+    warn "rbenv is already loaded from ~/.zshrc, since it will be loaded from ~/.tools it is no longer necessary to keep it there"
+  fi
+
+  if in_file 'rbenv init' ~/.tools ;then
+    log "nvm is is already loaded from ~/.tools"
+  else
+    tee -a ~/.tools 1>/dev/null <<EOF
 # rbenv
 export RBENV_ROOT="\${HOME}/.rbenv"
 if [ -d "\${RBENV_ROOT}" ]; then
@@ -76,12 +64,41 @@ if [ -d "\${RBENV_ROOT}" ]; then
 fi
 
 EOF
-
+  fi
+else
+  warn "rbenv is already installed"
 fi
 
-echo "[[ -f ~/.tools ]] && source ~/.tools" | tee -a ~/.zshrc
+if ! in_file ". ~/.tools" ~/.zshrc; then
+  echo "[[ -f ~/.tools ]] && . ~/.tools" | tee -a ~/.zshrc >/dev/null
+fi
 
-source ~/.tools
+if ! in_file ". ~/.tools" ~/.bash_profile; then
+  echo "[[ -f ~/.tools ]] && . ~/.tools" | tee -a ~/.bash_profile >/dev/null
+fi
 
-# install node LTS (4.x)
-nvm install $NODE_VERSION && nvm use $NODE_VERSION
+zsh <<EOF
+# shellcheck source=/dev/null
+source ~/.zshrc;
+source /tmp/install_helpers
+
+log "Installing NodeJs (LTS)"
+nvm install stable
+
+if on_linux; then
+  log "Installing ruby-build prerequisites"
+  ensure_installed bzip2 build-essential libssl-dev libreadline-dev
+fi
+
+latest="\$(rbenv install -l | sed -n '/^[[:space:]]*[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}[[:space:]]*\$/ h;\${g;p;}' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*\$//')" &&
+
+if [[ \$(rbenv versions | grep -c "\$latest") -eq 0 ]]; then
+  log "Installing the latest ruby stable version '\$latest'"
+  rbenv install \$latest && rbenv use \$latest --global || log_error "Could not install ruby"
+else
+  log "The latest ruby version '\$latest' is already installed"
+fi
+EOF
+
+
+ensure_installed vim

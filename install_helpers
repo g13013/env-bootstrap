@@ -1,0 +1,111 @@
+#!/bin/bash
+
+export TERM=xterm-256color
+export PLATFORM=`uname`
+
+_info="\x1B[0;32m"
+_error="\x1B[0;31m"
+_warn="\x1B[0;33m"
+
+warn() {
+  local str="$*"
+  echo -e "$_warn$str\033[0m"
+}
+
+log() {
+  local str="$*"
+  echo -e "$_info$str\033[0m"
+}
+
+
+log_error() {
+  local str="$*"
+  echo -e "$_error$str\033[0m"
+}
+
+on_linux() {
+  [[ "$PLATFORM" == "Linux" ]] && return 0 || return 1
+}
+
+on_mac() {
+  [[ "$PLATFORM" == "Darwin" ]] && return 0 || return 1
+}
+
+is_installed() {
+  local package=$1
+
+  if which $package >/dev/null; then
+    return 0
+  fi
+
+  if on_linux; then
+    if [[ $(dpkg-query -W -f='${Status}' $package 2>/dev/null | grep -c "ok installed") -gt 0 ]]; then
+      return 0
+    fi
+  elif on_mac && ! [[ "$package" != "brew" ]]; then
+    if is_installed brew && [[ "$(brew list | grep '^$pacakge$')" -eq 1 ]]; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+install_mac() {
+  local package=$1
+
+  if is_installed brew; then
+    if [[ -z "$PKG_UPDATED" ]]; then
+      brew update || (log_error "brew update failed" && return 1)
+      export PKG_UPDATED=1
+    fi
+
+    brew install $package && return 0
+  else
+    log_error "brew is not installed"
+  fi
+}
+
+install_linux() {
+  local package=$1
+
+  if [[ $UID != 0 ]]; then
+      log_error "Please run this script with sudo to be able to install packages"
+      exit 1
+  fi
+
+  if is_installed apt-get; then
+    if [[ -z "$PKG_UPDATED" ]]; then
+      apt-get update | (log_error "apt-get update failed" && return 1)
+      export PKG_UPDATED=1
+    fi
+
+    apt-get install $package -y && return 0
+  else
+    log_error "apt-get is not installed"
+  fi
+
+  return 1
+}
+
+ensure_installed() {
+  for package in "$@"
+  do
+    if is_installed $package; then
+      log "$package is already installed"
+      continue;
+    fi
+    log "Installing $package..."
+    (on_mac && install_mac $package || install_linux $package) || (log_error "Can't automatically install $package" && exit 1)
+  done
+}
+
+in_file() {
+  [ -f $2 ] && grep -q "$1" $2 && return 0 || return 1
+}
+
+if on_mac; then
+  install_tool="brew"
+else
+  install_tool="apt-get"
+fi
