@@ -1,26 +1,26 @@
 #!/bin/bash
 
-export TERM=xterm-256color
 export PLATFORM=`uname`
 
 _info="\x1B[0;32m"
 _error="\x1B[0;31m"
 _warn="\x1B[0;33m"
+_reset="\033[0m"
 
 warn() {
   local str="$*"
-  echo -e "$_warn$str\033[0m"
+  echo -e "$_warn$str$_reset"
 }
 
 log() {
   local str="$*"
-  echo -e "$_info$str\033[0m"
+  echo -e "$_info$str$_reset"
 }
 
 
 log_error() {
   local str="$*"
-  echo -e "$_error$str\033[0m"
+  echo -e "$_error$str$_reset"
 }
 
 on_linux() {
