@@ -38,14 +38,13 @@ is_installed() {
     return 0
   fi
 
-  if on_linux; then
-    if [[ $(dpkg-query -W -f='${Status}' $package 2>/dev/null | grep -c "ok installed") -gt 0 ]]; then
-      return 0
-    fi
-  elif on_mac && ! [[ "$package" != "brew" ]]; then
-    if is_installed brew && [[ "$(brew list | grep '^$pacakge$')" -eq 1 ]]; then
-      return 0
-    fi
+  [[ "$package" == "brew" ]] && return 1
+
+  # prioritize brew for all platforms
+  if is_installed brew && [[ "$(brew list | grep '^$pacakge$')" -eq 1 ]]; then
+    return 0
+  elif on_linux && [[ $(dpkg-query -W -f='${Status}' $package 2>/dev/null | grep -c "ok installed") -gt 0 ]]; then
+    return 0
   fi
 
   return 1
@@ -76,7 +75,7 @@ install_linux() {
 
   if is_installed apt-get; then
     if [[ -z "$PKG_UPDATED" ]]; then
-      apt-get update | (log_error "apt-get update failed" && return 1)
+      apt-get update || (log_error "apt-get update failed" && return 1)
       export PKG_UPDATED=1
     fi
 
