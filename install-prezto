@@ -33,7 +33,7 @@ warn "    zsh-cwd-history"
 mkdir -p ~/.zprezto/modules/zsh-cwd-history &&
   (curl  -sSL https://raw.githubusercontent.com/ericfreese/zsh-cwd-history/master/zsh-cwd-history.zsh | tee ~/.zprezto/modules/zsh-cwd-history/init.zsh) 1>/dev/null
 
-if [ get_shell != "zsh" ]; then
+if [ "$(get_shell)" != "zsh" ]; then
   warn "your actual shell is $_info$(get_shell)$_reset"
   log "Need you to type your password to set ${_info}zsh${_reset} as your default prompt"
   chsh -s /bin/zsh
