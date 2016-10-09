@@ -119,5 +119,5 @@ in_file() {
 
 get_shell() {
   on_linux && basename $(cat /etc/passwd | grep $(whoami) | cut -d ':' -f 7) && return
-  on_mac && basename $(finger agasmi | grep -o "Shell: .*" | sed -E "s/Shell: (.*)/\\1/")
+  on_mac && basename $(finger $(whoami) | grep -o "Shell: .*" | sed -E "s/Shell: (.*)/\\1/")
 }
