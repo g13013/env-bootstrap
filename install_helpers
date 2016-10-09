@@ -31,6 +31,20 @@ on_mac() {
   [[ "$PLATFORM" == "Darwin" ]] && return 0 || return 1
 }
 
+install_xcode() {
+  touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress;
+  PROD=$(softwareupdate -l |
+    grep "\*.*Command Line" |
+    head -n 1 | awk -F"*" '{print $2}' |
+    sed -e 's/^ *//' |
+    tr -d '\n')
+
+  [ ! -z "$PROD" ] && softwareupdate -i "$PROD" -v && return 0;
+
+  warn "Could not install xcode, it might be already installed or you might have a connection problem"
+  return 1
+}
+
 is_installed() {
   local package=$1
 

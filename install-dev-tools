@@ -8,7 +8,7 @@ set -e
 [[ -z $(which curl) ]] &&  apt-get update && apt-get install curl -y
 curl -ssL  $INSTALL_SOURCE/install_helpers > /tmp/install_helpers && source /tmp/install_helpers || (echo "Can't load helpers file from $INSTALL_SOURCE/install_helpers" && exit 1)
 
-! is_installed git && (on_mac && xcode-select --install || ensure_installed git) # git is special, on mac we prioritize xcode git version
+! is_installed git && (on_mac && install_xcode || ensure_installed git) # git is special, on mac we prioritize xcode git version
 
 if on_mac && ! is_installed brew ; then
   log "Installing homebrew"
